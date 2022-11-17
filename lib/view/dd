@@ -1,0 +1,82 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:test_app/entity/cep.dart';
+import 'package:test_app/entity/dditem.dart';
+
+import '../service/cep_service.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  CepService cepService = CepService();
+
+  String _cep = '';
+  String _logradouro = '';
+  String _complemento = '';
+
+  TextEditingController textEditingController = TextEditingController();
+
+  bool fetch = false;
+
+  var items = ['teste'];
+
+  var dropItem = 'teste';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('CEP'),
+        actions: [
+          IconButton(
+            onPressed: () => getItems(),
+            icon: const Icon(Icons.arrow_downward_rounded),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          TextField(
+            controller: textEditingController,
+          ),
+          Visibility(
+            visible: fetch,
+            child: DropdownButton(
+                value: dropItem,
+                items: items.map((String item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    dropItem = value!;
+                  });
+                }),
+          ),
+          Text(_cep),
+          Text(_logradouro),
+          Text(_complemento),
+        ],
+      ),
+    );
+  }
+
+  Future<void> getItems() async {
+    Response response = await get(Uri.parse('http://192.168.1.96:8080/'));
+    print(response.body);
+    setState(() {
+      items = DDItem.fromJson(jsonDecode(response.body)).dditems;
+      dropItem = items.first;
+      fetch = true;
+    });
+  }
+}
